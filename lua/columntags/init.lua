@@ -9,9 +9,57 @@ end
 local function get_non_floating_windows()
 	local current_window = 0
 	local windows = {}
+	-- Filetypes to exclude (file explorers, terminals, etc.)
+	local excluded_filetypes = {
+		-- File explorers
+		["neo-tree"] = true,
+		["NvimTree"] = true,
+		["nerdtree"] = true,
+		["oil"] = true,
+		-- Git
+		["fugitive"] = true,
+		["fugitiveblame"] = true,
+		["gitcommit"] = true,
+		["gitrebase"] = true,
+		-- Terminals
+		["toggleterm"] = true,
+		-- Special windows
+		["qf"] = true,  -- quickfix/location list
+		["help"] = true,
+		["man"] = true,
+		["Trouble"] = true,
+		["trouble"] = true,
+		["aerial"] = true,
+		["Outline"] = true,
+		["undotree"] = true,
+		["diff"] = true,
+		["DiffviewFiles"] = true,
+		["TelescopePrompt"] = true,
+		["lazy"] = true,
+		["mason"] = true,
+		["lspinfo"] = true,
+		["dashboard"] = true,
+		["alpha"] = true,
+		["starter"] = true,
+	}
+
+	local excluded_buftypes = {
+		["terminal"] = true,
+		["nofile"] = true,
+		["quickfix"] = true,
+		["prompt"] = true,
+		["help"] = true,
+	}
+
 	for i = 1, vim.fn.winnr("$") do
 		local win = vim.fn.win_getid(i)
-		if vim.api.nvim_win_get_config(win).relative == "" then
+		local config = vim.api.nvim_win_get_config(win)
+		local buf = vim.api.nvim_win_get_buf(win)
+		local filetype = vim.bo[buf].filetype
+		local buftype = vim.bo[buf].buftype
+
+		-- Include only non-floating windows with non-excluded filetypes and non-terminal buftypes
+		if config.relative == "" and not excluded_filetypes[filetype] and not excluded_buftypes[buftype] then
 			table.insert(windows, win)
 			if win == vim.api.nvim_get_current_win() then
 				current_window = #windows
