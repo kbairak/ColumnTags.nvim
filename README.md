@@ -51,10 +51,11 @@ lua require('columntags').setup()
 
 The plugin overrides the default tag jumping behavior with column-based navigation:
 
-| Key       | Action                                    |
-|-----------|-------------------------------------------|
-| `<C-]>`   | Jump to definition in new column          |
-| `<C-t>`   | Navigate back (move focus or restore col) |
+| Key     | Action                                    |
+|---------|-------------------------------------------|
+| `<C-]>` | Jump to definition in new column          |
+| `<C-t>` | Navigate back (move focus or restore col) |
+| `<C-,>` | Toggle ColumnTags mode                    |
 
 ### Navigation Behavior
 
@@ -72,43 +73,77 @@ The plugin overrides the default tag jumping behavior with column-based navigati
 
 ## Configuration
 
+The plugin works out of the box with sensible defaults. Call `setup()` to customize window exclusions:
+
 ```lua
 require('columntags').setup({
-  max_columns = 3,     -- Maximum number of visible columns (default: 3)
-  keymaps = true,      -- Enable default keymaps (default: true)
-  debug = false        -- Enable debug logging (default: false)
+  -- Configuration options
 })
 ```
 
 ### Options
 
-- **`max_columns`** (number, default: `3`)
-  - Maximum number of visible columns before hiding leftmost
-  - Recommended range: 2-4 depending on screen width
+#### Excluded Filetypes and Buftypes
 
-- **`keymaps`** (boolean, default: `true`)
-  - Whether to enable default `<C-]>` and `<C-t>` keymaps
-  - Set to `false` if you want to define custom mappings
+The plugin excludes certain window types from column navigation (file explorers, terminals, help windows, etc.). You can customize these exclusions using **replace mode** or **extend mode**.
 
-- **`debug`** (boolean, default: `false`)
-  - Enable debug logging to help troubleshoot issues
-  - Logs will appear in `:messages` with `[columntags]` prefix
+**Replace Mode** - Provide your own complete list:
 
-### Custom Keymaps
+- `excluded_filetypes` - Replace default excluded filetypes entirely
+- `excluded_buftypes` - Replace default excluded buftypes entirely
 
-If you disable default keymaps, you can create your own:
+**Extend Mode** - Add to the defaults:
+
+- `add_excluded_filetypes` - Add filetypes to default exclusions
+- `add_excluded_buftypes` - Add buftypes to default exclusions
+
+**Default Excluded Filetypes:**
+`neo-tree`, `NvimTree`, `nerdtree`, `oil`, `fugitive`, `fugitiveblame`, `gitcommit`, `gitrebase`, `toggleterm`, `qf`, `help`, `man`, `Trouble`, `trouble`, `aerial`, `Outline`, `undotree`, `diff`, `DiffviewFiles`, `TelescopePrompt`, `lazy`, `mason`, `lspinfo`, `dashboard`, `alpha`, `starter`
+
+**Default Excluded Buftypes:**
+`terminal`, `nofile`, `quickfix`, `prompt`, `help`
+
+### Configuration Examples
+
+**Replace mode** - Use only your specified exclusions:
 
 ```lua
-require('columntags').setup({ keymaps = false })
-
-vim.keymap.set('n', 'gd', function()
-  require('columntags').jump()
-end, { desc = 'Jump to definition (column)' })
-
-vim.keymap.set('n', 'gb', function()
-  require('columntags').back()
-end, { desc = 'Navigate back (column)' })
+require('columntags').setup({
+  excluded_filetypes = { "neo-tree", "oil" },
+  -- Only neo-tree and oil are excluded, all defaults ignored
+})
 ```
+
+**Extend mode** - Add to the defaults:
+
+```lua
+require('columntags').setup({
+  add_excluded_filetypes = { "my-custom-explorer", "my-special-buffer" },
+  -- All defaults PLUS your custom types
+})
+```
+
+**Configure both lists**:
+
+```lua
+require('columntags').setup({
+  add_excluded_filetypes = { "custom-type" },
+  excluded_buftypes = { "terminal" },  -- Replace: only terminal excluded
+})
+```
+
+**Empty exclusions** - Navigate through all windows:
+
+```lua
+require('columntags').setup({
+  excluded_filetypes = {},
+  excluded_buftypes = {},
+})
+```
+
+### Fallback Behavior
+
+When you invoke `<C-]>` or `<C-t>` from an excluded window (like neo-tree or a quickfix list), the plugin automatically falls back to Neovim's default tag navigation behavior instead of using column navigation. This ensures excluded windows work as expected without interfering with the plugin's navigation system.
 
 ## How It Works
 
@@ -157,11 +192,11 @@ Result: [a.lua] [b.lua] [new.lua]
 
 - [x] Handle non-file buffers (terminals, help, etc.)
 - [x] Add commands (`:ColumnTagsReset`, `:ColumnTagsToggle`, etc.)
-- [ ] Provide `<Plug>` mappings for better customization
+- [x] Configuration
+  - [x] Excluded filetypes or buftypes
+  - [ ] Max columns
+- [ ] If no tag under cursor, do nothing (somehow)
 - [ ] Visual indicator for hidden stack depth
-- [ ] Column highlighting to show navigation path
-- [ ] Option to persist state across Neovim sessions
-- [ ] Integration with other navigation plugins
 
 ## Contributing
 

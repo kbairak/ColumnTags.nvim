@@ -4,6 +4,12 @@ if vim.g.columntags_loaded then
 end
 vim.g.columntags_loaded = 1
 
+-- Initialize with defaults if not already configured
+local columntags = require("columntags")
+if not columntags.config then
+	columntags.setup()
+end
+
 -- Default keymap setup
 vim.keymap.set("n", "<C-]>", function()
 	require("columntags").jump()

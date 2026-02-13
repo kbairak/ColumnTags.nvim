@@ -1,6 +1,91 @@
 local M = {}
 
 M.enabled = true
+M.config = nil
+
+-- Default configuration
+local default_config = {
+	excluded_filetypes = {
+		-- File explorers
+		"neo-tree",
+		"NvimTree",
+		"nerdtree",
+		"oil",
+		-- Git
+		"fugitive",
+		"fugitiveblame",
+		"gitcommit",
+		"gitrebase",
+		-- Terminals
+		"toggleterm",
+		-- Special windows
+		"qf",
+		"help",
+		"man",
+		"Trouble",
+		"trouble",
+		"aerial",
+		"Outline",
+		"undotree",
+		"diff",
+		"DiffviewFiles",
+		"TelescopePrompt",
+		"lazy",
+		"mason",
+		"lspinfo",
+		"dashboard",
+		"alpha",
+		"starter",
+	},
+	excluded_buftypes = {
+		"terminal",
+		"nofile",
+		"quickfix",
+		"prompt",
+		"help",
+	},
+}
+
+-- Setup function
+function M.setup(opts)
+	opts = opts or {}
+
+	-- Start with defaults
+	local config = {
+		excluded_filetypes = vim.deepcopy(default_config.excluded_filetypes),
+		excluded_buftypes = vim.deepcopy(default_config.excluded_buftypes),
+	}
+
+	-- Handle excluded_filetypes: replace or extend
+	if opts.excluded_filetypes then
+		config.excluded_filetypes = opts.excluded_filetypes
+	elseif opts.add_excluded_filetypes then
+		vim.list_extend(config.excluded_filetypes, opts.add_excluded_filetypes)
+	end
+
+	-- Handle excluded_buftypes: replace or extend
+	if opts.excluded_buftypes then
+		config.excluded_buftypes = opts.excluded_buftypes
+	elseif opts.add_excluded_buftypes then
+		vim.list_extend(config.excluded_buftypes, opts.add_excluded_buftypes)
+	end
+
+	-- Convert lists to lookup tables for efficient checking
+	local excluded_filetypes_lookup = {}
+	for _, ft in ipairs(config.excluded_filetypes) do
+		excluded_filetypes_lookup[ft] = true
+	end
+
+	local excluded_buftypes_lookup = {}
+	for _, bt in ipairs(config.excluded_buftypes) do
+		excluded_buftypes_lookup[bt] = true
+	end
+
+	M.config = {
+		excluded_filetypes = excluded_filetypes_lookup,
+		excluded_buftypes = excluded_buftypes_lookup,
+	}
+end
 
 local function init_stack()
 	if not vim.t.columntags_stack then
@@ -8,60 +93,27 @@ local function init_stack()
 	end
 end
 
+local function is_excluded_window(win)
+	win = win or vim.fn.win_getid()
+	local config = vim.api.nvim_win_get_config(win)
+	local buf = vim.api.nvim_win_get_buf(win)
+	local filetype = vim.bo[buf].filetype
+	local buftype = vim.bo[buf].buftype
+	return config.relative ~= "" or M.config.excluded_filetypes[filetype] or M.config.excluded_buftypes[buftype]
+end
+
 local function get_non_floating_windows()
+	-- Initialize config with defaults if not already set
+	if not M.config then
+		M.setup()
+	end
+
 	local current_window = 0
 	local windows = {}
-	-- Filetypes to exclude (file explorers, terminals, etc.)
-	local excluded_filetypes = {
-		-- File explorers
-		["neo-tree"] = true,
-		["NvimTree"] = true,
-		["nerdtree"] = true,
-		["oil"] = true,
-		-- Git
-		["fugitive"] = true,
-		["fugitiveblame"] = true,
-		["gitcommit"] = true,
-		["gitrebase"] = true,
-		-- Terminals
-		["toggleterm"] = true,
-		-- Special windows
-		["qf"] = true, -- quickfix/location list
-		["help"] = true,
-		["man"] = true,
-		["Trouble"] = true,
-		["trouble"] = true,
-		["aerial"] = true,
-		["Outline"] = true,
-		["undotree"] = true,
-		["diff"] = true,
-		["DiffviewFiles"] = true,
-		["TelescopePrompt"] = true,
-		["lazy"] = true,
-		["mason"] = true,
-		["lspinfo"] = true,
-		["dashboard"] = true,
-		["alpha"] = true,
-		["starter"] = true,
-	}
-
-	local excluded_buftypes = {
-		["terminal"] = true,
-		["nofile"] = true,
-		["quickfix"] = true,
-		["prompt"] = true,
-		["help"] = true,
-	}
 
 	for i = 1, vim.fn.winnr("$") do
 		local win = vim.fn.win_getid(i)
-		local config = vim.api.nvim_win_get_config(win)
-		local buf = vim.api.nvim_win_get_buf(win)
-		local filetype = vim.bo[buf].filetype
-		local buftype = vim.bo[buf].buftype
-
-		-- Include only non-floating windows with non-excluded filetypes and non-terminal buftypes
-		if config.relative == "" and not excluded_filetypes[filetype] and not excluded_buftypes[buftype] then
+		if not is_excluded_window(win) then
 			table.insert(windows, win)
 			if win == vim.api.nvim_get_current_win() then
 				current_window = #windows
@@ -89,7 +141,7 @@ local function keep_windows(count)
 end
 
 function M.jump()
-	if not M.enabled then
+	if not M.enabled or is_excluded_window() then
 		vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<C-]>", true, false, true), "n", false)
 		return
 	end
@@ -153,7 +205,7 @@ function M.jump()
 end
 
 function M.back()
-	if not M.enabled then
+	if not M.enabled or is_excluded_window() then
 		vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<C-t>", true, false, true), "n", false)
 		return
 	end
