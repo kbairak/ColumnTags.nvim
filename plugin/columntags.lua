@@ -19,13 +19,28 @@ end, {
 	desc = "Column Tags: Navigate back",
 })
 
--- Preserve default behavior with g prefix
-vim.keymap.set("n", "g<C-]>", "<C-]>", {
+vim.keymap.set("n", "<C-,>", function()
+	require("columntags").toggle()
+end, {
 	silent = true,
-	desc = "Default: Jump to tag",
+	desc = "Column Tags: Toggle plugin",
 })
 
-vim.keymap.set("n", "g<C-t>", "<C-t>", {
-	silent = true,
-	desc = "Default: Jump back in tag stack",
+-- Commands
+vim.api.nvim_create_user_command("ColumnTagsEnable", function()
+	require("columntags").enable()
+end, {
+	desc = "Enable ColumnTags plugin",
+})
+
+vim.api.nvim_create_user_command("ColumnTagsDisable", function()
+	require("columntags").disable()
+end, {
+	desc = "Disable ColumnTags plugin",
+})
+
+vim.api.nvim_create_user_command("ColumnTagsToggle", function()
+	require("columntags").toggle()
+end, {
+	desc = "Toggle ColumnTags plugin on/off",
 })

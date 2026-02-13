@@ -1,4 +1,4 @@
-# columntags.nvim
+# ColumnTags.nvim
 
 A Miller Columns navigation plugin for Neovim that reimagines definition jumping with a visual column-based interface inspired by macOS Finder.
 
@@ -59,11 +59,13 @@ The plugin overrides the default tag jumping behavior with column-based navigati
 ### Navigation Behavior
 
 **Forward Navigation (`<C-]>`):**
+
 - From rightmost column: Creates new column to the right
 - When max columns reached: Hides leftmost column (saved to stack)
 - From middle column: Closes all columns to the right, creates new column
 
 **Backward Navigation (`<C-t>`):**
+
 - When not on leftmost column: Moves focus one column left
 - When on leftmost column: Restores hidden column from stack
 - Maintains max column limit when restoring
@@ -153,15 +155,12 @@ Result: [a.lua] [b.lua] [new.lua]
 
 ## Future Enhancements
 
-- [ ] Handle non-file buffers (terminals, help, etc.)
-- [ ] Add commands (`:ColumnTagsReset`, `:ColumnTagsToggle`, etc.)
+- [x] Handle non-file buffers (terminals, help, etc.)
+- [x] Add commands (`:ColumnTagsReset`, `:ColumnTagsToggle`, etc.)
 - [ ] Provide `<Plug>` mappings for better customization
-- [ ] Handle edge case: user manually closes a column
-- [ ] Smart window width distribution (adjustable ratios)
 - [ ] Visual indicator for hidden stack depth
 - [ ] Column highlighting to show navigation path
 - [ ] Option to persist state across Neovim sessions
-- [ ] Support for horizontal splits (row-based navigation)
 - [ ] Integration with other navigation plugins
 
 ## Contributing

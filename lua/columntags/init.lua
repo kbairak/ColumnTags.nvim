@@ -1,5 +1,7 @@
 local M = {}
 
+M.enabled = true
+
 local function init_stack()
 	if not vim.t.columntags_stack then
 		vim.t.columntags_stack = {}
@@ -24,7 +26,7 @@ local function get_non_floating_windows()
 		-- Terminals
 		["toggleterm"] = true,
 		-- Special windows
-		["qf"] = true,  -- quickfix/location list
+		["qf"] = true, -- quickfix/location list
 		["help"] = true,
 		["man"] = true,
 		["Trouble"] = true,
@@ -87,6 +89,11 @@ local function keep_windows(count)
 end
 
 function M.jump()
+	if not M.enabled then
+		vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<C-]>", true, false, true), "n", false)
+		return
+	end
+
 	-- Disable foldenable
 	local foldenable_before = vim.opt.foldenable
 	vim.opt.foldenable = false
@@ -146,6 +153,11 @@ function M.jump()
 end
 
 function M.back()
+	if not M.enabled then
+		vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<C-t>", true, false, true), "n", false)
+		return
+	end
+
 	-- Get only non-floating windows in appearance order
 	local current_window, windows = get_non_floating_windows()
 
@@ -190,6 +202,24 @@ function M.back()
 
 	-- Focus the leftmost window
 	vim.api.nvim_set_current_win(windows[1])
+end
+
+function M.enable()
+	M.enabled = true
+	vim.notify("ColumnTags enabled", vim.log.levels.INFO)
+end
+
+function M.disable()
+	M.enabled = false
+	vim.notify("ColumnTags disabled", vim.log.levels.INFO)
+end
+
+function M.toggle()
+	if M.enabled then
+		M.disable()
+	else
+		M.enable()
+	end
 end
 
 return M
