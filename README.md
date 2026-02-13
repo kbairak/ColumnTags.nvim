@@ -2,6 +2,8 @@
 
 A Miller Columns navigation plugin for Neovim that reimagines definition jumping with a visual column-based interface inspired by macOS Finder.
 
+<https://github.com/user-attachments/assets/fb31eb00-4a83-4b12-9fa5-958951aa4343>
+
 ## Overview
 
 Instead of replacing your current buffer when jumping to definitions, `columntags` creates vertical column splits that show your navigation path through the codebase. Navigate forward with `<C-]>` and backward with `<C-t>` while maintaining context of where you've been.
