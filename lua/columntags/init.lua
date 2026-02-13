@@ -34,7 +34,6 @@ local function keep_windows(count)
 		window_count = window_count - 1
 	end
 
-	-- Update window list after modifications
 	local _, result = get_non_floating_windows()
 	return result
 end
@@ -53,7 +52,8 @@ function M.jump()
 	local shown_buffers = {}
 	for i = 1, current_window do
 		local buf = vim.api.nvim_win_get_buf(windows[i])
-		table.insert(shown_buffers, buf)
+		local pos = vim.api.nvim_win_get_cursor(windows[i])
+		table.insert(shown_buffers, { buf, pos })
 	end
 
 	-- List of all buffers that need to be remembered (stacked + shown)
@@ -73,14 +73,18 @@ function M.jump()
 
 	-- If size of last_two_buffers is 1, put the buffer in the both windows
 	if #last_two_buffers == 1 then
-		vim.api.nvim_win_set_buf(windows[1], last_two_buffers[1])
-		vim.api.nvim_win_set_buf(windows[2], last_two_buffers[1])
+		vim.api.nvim_win_set_buf(windows[1], last_two_buffers[1][1])
+		vim.api.nvim_win_set_cursor(windows[1], last_two_buffers[1][2])
+		vim.api.nvim_win_set_buf(windows[2], last_two_buffers[1][1])
+		vim.api.nvim_win_set_cursor(windows[2], last_two_buffers[1][2])
 	-- Else, if size of last_two_buffers is 2, put the second-to-last buffer in the first window and
 	-- the last buffer in the second and third window
 	else
-		vim.api.nvim_win_set_buf(windows[1], last_two_buffers[1])
-		vim.api.nvim_win_set_buf(windows[2], last_two_buffers[2])
-		vim.api.nvim_win_set_buf(windows[3], last_two_buffers[2])
+		vim.api.nvim_win_set_buf(windows[1], last_two_buffers[1][1])
+		vim.api.nvim_win_set_cursor(windows[1], last_two_buffers[1][2])
+		vim.api.nvim_win_set_buf(windows[2], last_two_buffers[2][1])
+		vim.api.nvim_win_set_cursor(windows[2], last_two_buffers[2][2])
+		vim.api.nvim_win_set_buf(windows[3], last_two_buffers[2][1])
 	end
 
 	-- Focus the rightmost window, restore cursor position, and send `<C-]>`
@@ -98,7 +102,7 @@ function M.back()
 	local current_window, windows = get_non_floating_windows()
 
 	-- If more than one windows and not leftmost has focus, just move focus left
-	if #windows > 1 and current_window > 1 then
+	if current_window > 1 then
 		vim.api.nvim_set_current_win(windows[current_window - 1])
 		return
 	end
@@ -107,7 +111,8 @@ function M.back()
 	local shown_buffers = {}
 	for i = 1, #windows do
 		local buf = vim.api.nvim_win_get_buf(windows[i])
-		table.insert(shown_buffers, buf)
+		local pos = vim.api.nvim_win_get_cursor(windows[i])
+		table.insert(shown_buffers, { buf, pos })
 	end
 
 	-- List of all buffers that need to be remembered (stacked + shown)
@@ -131,7 +136,8 @@ function M.back()
 
 	-- Put each buffer in its proper window
 	for i, buf in ipairs(last_three_buffers) do
-		vim.api.nvim_win_set_buf(windows[i], buf)
+		vim.api.nvim_win_set_buf(windows[i], buf[1])
+		vim.api.nvim_win_set_cursor(windows[i], buf[2])
 	end
 
 	-- Focus the leftmost window
