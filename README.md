@@ -194,11 +194,11 @@ Result: [a.lua] [b.lua] [new.lua]
 
 - [x] Handle non-file buffers (terminals, help, etc.)
 - [x] Add commands (`:ColumnTagsReset`, `:ColumnTagsToggle`, etc.)
+- [x] Visual indicator for hidden stack depth
 - [x] Configuration
   - [x] Excluded filetypes or buftypes
   - [ ] Max columns
 - [ ] If no tag under cursor, do nothing (somehow)
-- [ ] Visual indicator for hidden stack depth
 
 ## Contributing
 
