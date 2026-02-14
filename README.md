@@ -73,6 +73,16 @@ The plugin overrides the default tag jumping behavior with column-based navigati
 - When on leftmost column: Restores hidden column from stack
 - Maintains max column limit when restoring
 
+### Commands
+
+| Command                  | Description                    |
+|--------------------------|--------------------------------|
+| `:ColumnTags enable`     | Enable ColumnTags navigation   |
+| `:ColumnTags disable`    | Disable ColumnTags navigation  |
+| `:ColumnTags toggle`     | Toggle ColumnTags on/off       |
+
+When disabled, `<C-]>` and `<C-t>` fall back to Neovim's default tag behavior.
+
 ## Configuration
 
 The plugin works out of the box with sensible defaults. Call `setup()` to customize window exclusions:
@@ -193,11 +203,13 @@ Result: [a.lua] [b.lua] [new.lua]
 ## Future Enhancements
 
 - [x] Handle non-file buffers (terminals, help, etc.)
-- [x] Add commands (`:ColumnTagsReset`, `:ColumnTagsToggle`, etc.)
+- [x] Add commands (`:ColumnTags enable`, `:ColumnTags toggle`, etc.)
 - [x] Visual indicator for hidden stack depth
 - [x] Configuration
   - [x] Excluded filetypes or buftypes
   - [ ] Max columns
+  - [ ] Configurable keymaps (allow users to disable default keymaps)
+  - [ ] Configurable popup timeout duration
 - [ ] If no tag under cursor, do nothing (somehow)
 
 ## Contributing

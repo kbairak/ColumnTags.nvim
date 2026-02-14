@@ -6,7 +6,8 @@ vim.g.columntags_loaded = 1
 
 -- Initialize with defaults if not already configured
 local columntags = require("columntags")
-if not columntags.config then
+local config = require("columntags.config")
+if not config.excluded_filetypes then
 	columntags.setup()
 end
 
@@ -33,20 +34,42 @@ end, {
 })
 
 -- Commands
-vim.api.nvim_create_user_command("ColumnTagsEnable", function()
-	require("columntags").enable()
-end, {
-	desc = "Enable ColumnTags plugin",
-})
+local subcommands = {
+	enable = function()
+		require("columntags").enable()
+	end,
+	disable = function()
+		require("columntags").disable()
+	end,
+	toggle = function()
+		require("columntags").toggle()
+	end,
+}
 
-vim.api.nvim_create_user_command("ColumnTagsDisable", function()
-	require("columntags").disable()
-end, {
-	desc = "Disable ColumnTags plugin",
-})
+vim.api.nvim_create_user_command("ColumnTags", function(opts)
+	local subcommand = opts.fargs[1]
 
-vim.api.nvim_create_user_command("ColumnTagsToggle", function()
-	require("columntags").toggle()
+	if not subcommand then
+		vim.notify(
+			string.format("ColumnTags: No subcommand provided. Available: %s", table.concat(vim.tbl_keys(subcommands), ", ")),
+			vim.log.levels.ERROR
+		)
+		return
+	end
+
+	local handler = subcommands[subcommand]
+	if handler then
+		handler()
+	else
+		vim.notify(
+			string.format("ColumnTags: Unknown subcommand '%s'. Available: %s", subcommand, table.concat(vim.tbl_keys(subcommands), ", ")),
+			vim.log.levels.ERROR
+		)
+	end
 end, {
-	desc = "Toggle ColumnTags plugin on/off",
+	nargs = "?",
+	complete = function()
+		return vim.tbl_keys(subcommands)
+	end,
+	desc = "ColumnTags plugin commands",
 })

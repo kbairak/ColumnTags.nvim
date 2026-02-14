@@ -12,18 +12,14 @@ local function hide()
 		state.timer = nil
 	end
 
-	pcall(function()
-		if state.win and vim.api.nvim_win_is_valid(state.win) then
-			vim.api.nvim_win_close(state.win, true)
-		end
-	end)
+	if state.win and vim.api.nvim_win_is_valid(state.win) then
+		vim.api.nvim_win_close(state.win, true)
+	end
 	state.win = nil
 
-	pcall(function()
-		if state.buf and vim.api.nvim_buf_is_valid(state.buf) then
-			vim.api.nvim_buf_delete(state.buf, { force = true })
-		end
-	end)
+	if state.buf and vim.api.nvim_buf_is_valid(state.buf) then
+		vim.api.nvim_buf_delete(state.buf, { force = true })
+	end
 	state.buf = nil
 end
 
@@ -113,7 +109,7 @@ function M.show(stack)
 	if state.buf then
 		-- Check if window is still valid before trying to configure it
 		if state.win and vim.api.nvim_win_is_valid(state.win) then
-			pcall(vim.api.nvim_win_set_config, state.win, win_config)
+			vim.api.nvim_win_set_config(state.win, win_config)
 		else
 			-- Window was closed externally, recreate it
 			state.buf = nil
@@ -125,9 +121,12 @@ function M.show(stack)
 		state.win = vim.api.nvim_open_win(state.buf, false, win_config)
 	end
 
-	vim.bo[state.buf].modifiable = true
-	vim.api.nvim_buf_set_lines(state.buf, 0, -1, false, display_lines)
-	vim.bo[state.buf].modifiable = false
+	if vim.api.nvim_buf_is_valid(state.buf) then
+		vim.bo[state.buf].modifiable = true
+		vim.api.nvim_buf_set_lines(state.buf, 0, -1, false, display_lines)
+		vim.bo[state.buf].modifiable = false
+	end
+
 	state.timer = vim.defer_fn(hide, 2000)
 end
 
