@@ -1,4 +1,5 @@
 local M = {}
+local popup = require("columntags.popup")
 
 M.enabled = true
 M.config = nil
@@ -50,135 +51,6 @@ local function init_stack()
 	if not vim.t.columntags_stack then
 		vim.t.columntags_stack = {}
 	end
-end
-
-local popup = {
-	buf = nil,
-	win = nil,
-	timer = nil,
-}
-
-function popup._hide()
-	if popup.timer then
-		popup.timer:stop()
-		popup.timer = nil
-	end
-
-	pcall(function()
-		if popup.win and vim.api.nvim_win_is_valid(popup.win) then
-			vim.api.nvim_win_close(popup.win, true)
-		end
-	end)
-	popup.win = nil
-
-	pcall(function()
-		if popup.buf and vim.api.nvim_buf_is_valid(popup.buf) then
-			vim.api.nvim_buf_delete(popup.buf, { force = true })
-		end
-	end)
-	popup.buf = nil
-end
-
-function popup.tick()
-	init_stack()
-	local lines = { "ColumnTags stack:" }
-
-	for _, buf in ipairs(vim.t.columntags_stack) do
-		local bufname = vim.api.nvim_buf_get_name(buf[1])
-		local line_num = buf[2][1]
-
-		-- Get relative path if file is descendant of cwd
-		local display_name
-		if bufname ~= "" and vim.fn.filereadable(bufname) == 1 then
-			local relative = vim.fn.fnamemodify(bufname, ":.")
-			-- Check if it's actually relative (doesn't start with /)
-			if not vim.startswith(relative, "/") then
-				display_name = relative
-			else
-				display_name = vim.fn.fnamemodify(bufname, ":t")
-			end
-		else
-			display_name = vim.fn.fnamemodify(bufname, ":t")
-		end
-
-		local line_text = string.format("%s:%d", display_name, line_num)
-		table.insert(lines, line_text)
-	end
-
-	-- If stack is empty, hide popup and return
-	if #lines == 1 then
-		if popup.buf then
-			popup._hide()
-		end
-		return
-	end
-
-	if popup.timer then
-		popup.timer:stop()
-		popup.timer = nil
-	end
-
-	-- Define maximum width
-	local max_width = 50
-
-	-- Truncate lines that exceed max_width
-	local display_lines = {}
-	for i, line in ipairs(lines) do
-		if #line > max_width then
-			-- Keep the end, replace start with ellipsis
-			local truncated = "…" .. string.sub(line, -(max_width - 1))
-			if i > 1 then
-				table.insert(display_lines, i - 1 .. ". " .. truncated)
-			else
-				table.insert(display_lines, truncated)
-			end
-		else
-			if i > 1 then
-				table.insert(display_lines, i - 1 .. ". " .. line)
-			else
-				table.insert(display_lines, line)
-			end
-		end
-	end
-
-	-- Calculate width based on truncated content
-	local width = 20
-	for _, line in ipairs(display_lines) do
-		width = math.max(width, #line + 2) -- +2 for padding
-	end
-	width = math.min(width, max_width + 2) -- Cap at max_width + padding
-
-	local win_config = {
-		relative = "editor",
-		width = width,
-		height = #display_lines,
-		row = 1,
-		col = 1,
-		style = "minimal",
-		border = "rounded",
-		focusable = false,
-		zindex = 50,
-	}
-
-	if popup.buf then
-		-- Check if window is still valid before trying to configure it
-		if popup.win and vim.api.nvim_win_is_valid(popup.win) then
-			pcall(vim.api.nvim_win_set_config, popup.win, win_config)
-		else
-			-- Window was closed externally, recreate it
-			popup.buf = nil
-		end
-	end
-
-	if not popup.buf then
-		popup.buf = vim.api.nvim_create_buf(false, true)
-		popup.win = vim.api.nvim_open_win(popup.buf, false, win_config)
-	end
-
-	vim.bo[popup.buf].modifiable = true
-	vim.api.nvim_buf_set_lines(popup.buf, 0, -1, false, display_lines)
-	vim.bo[popup.buf].modifiable = false
-	popup.timer = vim.defer_fn(popup._hide, 2000)
 end
 
 -- Setup function
@@ -332,7 +204,7 @@ function M.jump()
 	-- Enable foldenable again after jump
 	vim.opt.foldenable = foldenable_before
 
-	popup.tick()
+	popup.show(vim.t.columntags_stack)
 end
 
 function M.back()
@@ -385,7 +257,7 @@ function M.back()
 
 	-- Focus the leftmost window
 	vim.api.nvim_set_current_win(windows[1])
-	popup.tick()
+	popup.show(vim.t.columntags_stack)
 end
 
 function M.enable()
