@@ -22,7 +22,7 @@ Instead of replacing your current buffer when jumping to definitions, `columntag
 
 ```lua
 {
-  'yourusername/columntags.nvim',
+  'kbairak/columntags.nvim',
   config = function()
     require('columntags').setup()
   end
@@ -33,7 +33,7 @@ Instead of replacing your current buffer when jumping to definitions, `columntag
 
 ```lua
 use {
-  'yourusername/columntags.nvim',
+  'kbairak/columntags.nvim',
   config = function()
     require('columntags').setup()
   end
@@ -43,7 +43,7 @@ use {
 ### Using [vim-plug](https://github.com/junegunn/vim-plug)
 
 ```vim
-Plug 'yourusername/columntags.nvim'
+Plug 'kbairak/columntags.nvim'
 
 " In your init.lua or init.vim:
 lua require('columntags').setup()
