@@ -116,11 +116,26 @@ You can also change this value at runtime:
 
 The new value takes effect on the next `jump()` or `back()` action.
 
+#### Popup Timeout
+
+Control how long the stack depth indicator popup is displayed:
+
+- `popup_timeout` - Duration in milliseconds to show the popup (default: `2000`)
+
+```lua
+require('columntags').setup({
+  popup_timeout = 3000,  -- Show popup for 3 seconds instead of 2
+})
+```
+
+The popup appears when you navigate and shows the hidden stack depth. Set a higher value if you want more time to read it, or a lower value for a quicker dismiss.
+
 #### Keymaps
 
 Control which keymaps are registered by the plugin. By default, three keymaps are registered, but you can customize, disable, or completely remove all default keymaps.
 
 **Default Keymaps:**
+
 - `jump` - `<C-]>` - Jump to definition
 - `back` - `<C-t>` - Navigate back
 - `toggle` - `<C-,>` - Toggle plugin on/off
@@ -280,14 +295,6 @@ Result: [a.lua] [b.lua] [new.lua]
 
 ## Future Enhancements
 
-- [x] Handle non-file buffers (terminals, help, etc.)
-- [x] Add commands (`:ColumnTags enable`, `:ColumnTags toggle`, etc.)
-- [x] Visual indicator for hidden stack depth
-- [x] Configuration
-  - [x] Excluded filetypes or buftypes
-  - [x] Configurable Max columns
-  - [x] Configurable keymaps (allow users to disable default keymaps)
-  - [ ] Configurable popup timeout duration
 - [ ] If no tag under cursor, do nothing (somehow)
 
 ## Contributing

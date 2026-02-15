@@ -1,8 +1,9 @@
-local M = { excluded_filetypes = nil, excluded_buftypes = nil, max_columns = nil, keymaps = nil }
+local M = { excluded_filetypes = nil, excluded_buftypes = nil, max_columns = nil, keymaps = nil, popup_timeout = nil }
 
 -- Default configuration
 local default_config = {
 	max_columns = 3,
+	popup_timeout = 2000,
 	keymaps = {
 		jump = "<C-]>",
 		back = "<C-t>",
@@ -52,6 +53,7 @@ local default_config = {
 -- Setup configuration with user options
 -- @param opts: user configuration options
 --   - max_columns: maximum number of columns to show (default: 3)
+--   - popup_timeout: timeout in milliseconds for the stack popup (default: 2000)
 --   - excluded_filetypes: replace default excluded filetypes
 --   - add_excluded_filetypes: extend default excluded filetypes
 --   - excluded_buftypes: replace default excluded buftypes
@@ -63,6 +65,7 @@ function M.setup(user_opts)
 	-- Start with defaults
 	local opts = {
 		max_columns = default_config.max_columns,
+		popup_timeout = default_config.popup_timeout,
 		excluded_filetypes = vim.deepcopy(default_config.excluded_filetypes),
 		excluded_buftypes = vim.deepcopy(default_config.excluded_buftypes),
 		keymaps = vim.deepcopy(default_config.keymaps),
@@ -71,6 +74,11 @@ function M.setup(user_opts)
 	-- Handle max_columns
 	if user_opts.max_columns then
 		opts.max_columns = user_opts.max_columns
+	end
+
+	-- Handle popup_timeout
+	if user_opts.popup_timeout then
+		opts.popup_timeout = user_opts.popup_timeout
 	end
 
 	-- Handle excluded_filetypes: replace or extend
@@ -101,6 +109,9 @@ function M.setup(user_opts)
 
 	-- Store max_columns
 	M.max_columns = opts.max_columns
+
+	-- Store popup_timeout
+	M.popup_timeout = opts.popup_timeout
 
 	-- Convert lists to lookup tables for efficient checking
 	M.excluded_filetypes = {}

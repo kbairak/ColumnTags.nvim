@@ -1,4 +1,5 @@
 local M = {}
+local config = require("columntags.config")
 
 local state = {
 	buf = nil,
@@ -127,7 +128,7 @@ function M.show(stack)
 		vim.bo[state.buf].modifiable = false
 	end
 
-	state.timer = vim.defer_fn(hide, 2000)
+	state.timer = vim.defer_fn(hide, config.popup_timeout or 2000)
 end
 
 return M
