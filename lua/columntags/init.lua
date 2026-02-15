@@ -25,7 +25,9 @@ function M.jump()
 	local foldenable_before = vim.opt.foldenable
 	vim.opt.foldenable = false
 
-	local cursor_pos = vim.api.nvim_win_get_cursor(vim.api.nvim_get_current_win())
+	-- Capture state BEFORE the jump
+	local orig_buf = vim.api.nvim_get_current_buf()
+	local orig_pos = vim.api.nvim_win_get_cursor(0)
 
 	-- Get only non-floating windows in appearance order
 	local current_window, windows = utils.get_non_floating_windows()
@@ -40,44 +42,95 @@ function M.jump()
 		end
 	end
 
-	-- List of all buffers that need to be remembered (stacked + shown)
-	init_stack()
-	local all_buffers = {}
-	vim.list_extend(all_buffers, vim.t.columntags_stack)
-	vim.list_extend(all_buffers, shown_buffers)
+	-- Set up a one-time autocmd to detect when jump completes
+	local augroup = vim.api.nvim_create_augroup("ColumnTagsJump", { clear = true })
+	local triggered = false
 
-	-- Split buffers, keep last ones on 'right'
-	local left = vim.list_slice(all_buffers, 1, math.max(0, #all_buffers - (config.max_columns - 1)))
-	local right = vim.list_slice(all_buffers, math.max(1, #all_buffers - (config.max_columns - 2)))
-
-	-- Update stack
-	vim.t.columntags_stack = left
-	-- Must have as many windows as `#right + 1`
-	windows = utils.keep_windows(#right + 1)
-
-	-- Map the buffers of 'right' onto windows
-	for i, buf in ipairs(right) do
-		if vim.api.nvim_win_is_valid(windows[i]) and vim.api.nvim_buf_is_valid(buf[1]) then
-			vim.api.nvim_win_set_buf(windows[i], buf[1])
-			vim.api.nvim_win_set_cursor(windows[i], buf[2])
+	local function handle_jump_complete()
+		if triggered then
+			return
 		end
+		triggered = true
+
+		-- Clean up autocmd
+		vim.api.nvim_del_augroup_by_id(augroup)
+
+		-- Verify jump succeeded (different buffer OR different position)
+		local new_buf = vim.api.nvim_get_current_buf()
+		local new_pos = vim.api.nvim_win_get_cursor(0)
+
+		if orig_buf == new_buf and orig_pos[1] == new_pos[1] and orig_pos[2] == new_pos[2] then
+			-- Jump failed - restore foldenable and do nothing
+			vim.opt.foldenable = foldenable_before
+			return
+		end
+
+		-- Jump succeeded! Current window has the jump destination
+		-- Calculate column layout
+		init_stack()
+		local all_buffers = {}
+		vim.list_extend(all_buffers, vim.t.columntags_stack)
+		vim.list_extend(all_buffers, shown_buffers)
+
+		-- Split buffers: left for stack, right for visible columns
+		local left = vim.list_slice(all_buffers, 1, math.max(0, #all_buffers - (config.max_columns - 1)))
+		local right = vim.list_slice(all_buffers, math.max(1, #all_buffers - (config.max_columns - 2)))
+
+		-- Update stack
+		vim.t.columntags_stack = left
+
+		-- Delete all other non-floating windows
+		local jump_window = vim.api.nvim_get_current_win()
+		local _, all_windows = utils.get_non_floating_windows()
+		for _, win in ipairs(all_windows) do
+			if win ~= jump_window and vim.api.nvim_win_is_valid(win) then
+				vim.api.nvim_win_close(win, false)
+			end
+		end
+
+		-- Create vsplits to build columns to the left
+		-- We need #right columns to the left of the jump window
+		for _ = 1, #right do
+			vim.cmd("leftabove vsplit")
+		end
+
+		-- Get new window list (should be in left-to-right order)
+		_, windows = utils.get_non_floating_windows()
+
+		-- Populate the left windows with column buffers
+		for i, buf in ipairs(right) do
+			if vim.api.nvim_win_is_valid(windows[i]) and vim.api.nvim_buf_is_valid(buf[1]) then
+				vim.api.nvim_win_set_buf(windows[i], buf[1])
+				vim.api.nvim_win_set_cursor(windows[i], buf[2])
+			end
+		end
+
+		-- Focus the rightmost window (which already has the jump result)
+		if #windows > 0 and vim.api.nvim_win_is_valid(windows[#windows]) then
+			vim.api.nvim_set_current_win(windows[#windows])
+		end
+
+		-- Restore foldenable
+		vim.opt.foldenable = foldenable_before
+
+		-- Show popup
+		popup.show(vim.t.columntags_stack)
 	end
 
-	-- Put the last buffer of 'right' in the rightmost window, focus the rightmost window, restore
-	-- cursor position, and send `<C-]>`
-	if vim.api.nvim_win_is_valid(windows[#right + 1]) then
-		vim.api.nvim_win_set_buf(windows[#right + 1], right[#right][1])
-		vim.api.nvim_set_current_win(windows[#right + 1])
-		vim.api.nvim_win_set_cursor(windows[#right + 1], cursor_pos)
-		vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<C-]>", true, false, true), "n", false)
-	else
-		vim.notify("ColumnTags: Target window is invalid", vim.log.levels.WARN)
-	end
+	-- Set up autocmds to detect jump completion (BufEnter or CursorMoved)
+	vim.api.nvim_create_autocmd({ "BufEnter", "CursorMoved" }, {
+		group = augroup,
+		once = true,
+		callback = handle_jump_complete,
+	})
 
-	-- Enable foldenable again after jump
-	vim.opt.foldenable = foldenable_before
+	-- Fallback timeout in case autocmd doesn't fire
+	vim.defer_fn(function()
+		handle_jump_complete()
+	end, 100)
 
-	popup.show(vim.t.columntags_stack)
+	-- Do the jump in-place in the current window
+	vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<C-]>", true, false, true), "n", false)
 end
 
 function M.back()

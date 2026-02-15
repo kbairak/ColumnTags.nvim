@@ -295,7 +295,7 @@ Result: [a.lua] [b.lua] [new.lua]
 
 ## Future Enhancements
 
-- [ ] If no tag under cursor, do nothing (somehow)
+- [x] If no tag under cursor, do nothing (jump is attempted first, window layout only changes if jump succeeds)
 
 ## Contributing
 
