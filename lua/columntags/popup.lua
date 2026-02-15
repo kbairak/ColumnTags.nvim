@@ -70,30 +70,39 @@ function M.show(stack)
 
 	-- Truncate lines that exceed max_width and add line numbers
 	local display_lines = {}
+	local width = 20
 	for i, line in ipairs(lines) do
 		local formatted_line
+		local prefix = ""
 		if i > 1 then
 			-- Add line number prefix for stack entries (not the header)
-			formatted_line = string.format("%d. %s", i - 1, line)
+			prefix = string.format("%d. ", i - 1)
+			formatted_line = prefix .. line
 		else
 			formatted_line = line
 		end
 
+		-- Calculate width based on original formatted line (before truncation)
+		width = math.max(width, #formatted_line + 4)
+
 		if #formatted_line > max_width then
-			-- Keep the end, replace start with ellipsis
-			local truncated = "…" .. string.sub(formatted_line, -(max_width - 1))
-			table.insert(display_lines, truncated)
+			if i > 1 then
+				-- Keep the prefix, truncate the filename part
+				local available_width = max_width - #prefix - 1 -- -1 for ellipsis
+				local truncated = prefix .. "…" .. string.sub(line, -available_width)
+				table.insert(display_lines, truncated)
+			else
+				-- Header line truncation (keep the end)
+				local truncated = "…" .. string.sub(formatted_line, -(max_width - 1))
+				table.insert(display_lines, truncated)
+			end
 		else
 			table.insert(display_lines, formatted_line)
 		end
 	end
 
-	-- Calculate width based on truncated content
-	local width = 20
-	for _, line in ipairs(display_lines) do
-		width = math.max(width, #line + 4) -- +2 for padding
-	end
-	width = math.min(width, max_width + 4) -- Cap at max_width + padding
+	-- Cap width at max_width + padding
+	width = math.min(width, max_width + 4)
 
 	local win_config = {
 		relative = "editor",
