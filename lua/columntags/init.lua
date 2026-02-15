@@ -46,46 +46,29 @@ function M.jump()
 	vim.list_extend(all_buffers, vim.t.columntags_stack)
 	vim.list_extend(all_buffers, shown_buffers)
 
-	-- Update stack (all except last 2)
-	vim.t.columntags_stack = vim.list_slice(all_buffers, 1, math.max(0, #all_buffers - 2))
+	-- Split buffers, keep last ones on 'right'
+	local left = vim.list_slice(all_buffers, 1, math.max(0, #all_buffers - (config.max_columns - 1)))
+	local right = vim.list_slice(all_buffers, math.max(1, #all_buffers - (config.max_columns - 2)))
 
-	-- Keep last two buffers
-	local last_two_buffers = vim.list_slice(all_buffers, math.max(1, #all_buffers - 1))
+	-- Update stack
+	vim.t.columntags_stack = left
+	-- Must have as many windows as `#right + 1`
+	windows = utils.keep_windows(#right + 1)
 
-	-- Must have as many windows as `#last_two_buffers + 1`
-	windows = utils.keep_windows(#last_two_buffers + 1)
-
-	-- If size of last_two_buffers is 1, put the buffer in the both windows
-	if #last_two_buffers == 1 then
-		if vim.api.nvim_win_is_valid(windows[1]) and vim.api.nvim_buf_is_valid(last_two_buffers[1][1]) then
-			vim.api.nvim_win_set_buf(windows[1], last_two_buffers[1][1])
-			vim.api.nvim_win_set_cursor(windows[1], last_two_buffers[1][2])
-		end
-		if vim.api.nvim_win_is_valid(windows[2]) and vim.api.nvim_buf_is_valid(last_two_buffers[1][1]) then
-			vim.api.nvim_win_set_buf(windows[2], last_two_buffers[1][1])
-			vim.api.nvim_win_set_cursor(windows[2], last_two_buffers[1][2])
-		end
-	-- Else, if size of last_two_buffers is 2, put the second-to-last buffer in the first window and
-	-- the last buffer in the second and third window
-	else
-		if vim.api.nvim_win_is_valid(windows[1]) and vim.api.nvim_buf_is_valid(last_two_buffers[1][1]) then
-			vim.api.nvim_win_set_buf(windows[1], last_two_buffers[1][1])
-			vim.api.nvim_win_set_cursor(windows[1], last_two_buffers[1][2])
-		end
-		if vim.api.nvim_win_is_valid(windows[2]) and vim.api.nvim_buf_is_valid(last_two_buffers[2][1]) then
-			vim.api.nvim_win_set_buf(windows[2], last_two_buffers[2][1])
-			vim.api.nvim_win_set_cursor(windows[2], last_two_buffers[2][2])
-		end
-		if vim.api.nvim_win_is_valid(windows[3]) and vim.api.nvim_buf_is_valid(last_two_buffers[2][1]) then
-			vim.api.nvim_win_set_buf(windows[3], last_two_buffers[2][1])
+	-- Map the buffers of 'right' onto windows
+	for i, buf in ipairs(right) do
+		if vim.api.nvim_win_is_valid(windows[i]) and vim.api.nvim_buf_is_valid(buf[1]) then
+			vim.api.nvim_win_set_buf(windows[i], buf[1])
+			vim.api.nvim_win_set_cursor(windows[i], buf[2])
 		end
 	end
 
-	-- Focus the rightmost window, restore cursor position, and send `<C-]>`
-	local target_win = windows[#last_two_buffers + 1]
-	if vim.api.nvim_win_is_valid(target_win) then
-		vim.api.nvim_set_current_win(target_win)
-		vim.api.nvim_win_set_cursor(target_win, cursor_pos)
+	-- Put the last buffer of 'right' in the rightmost window, focus the rightmost window, restore
+	-- cursor position, and send `<C-]>`
+	if vim.api.nvim_win_is_valid(windows[#right + 1]) then
+		vim.api.nvim_win_set_buf(windows[#right + 1], right[#right][1])
+		vim.api.nvim_set_current_win(windows[#right + 1])
+		vim.api.nvim_win_set_cursor(windows[#right + 1], cursor_pos)
 		vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<C-]>", true, false, true), "n", false)
 	else
 		vim.notify("ColumnTags: Target window is invalid", vim.log.levels.WARN)
@@ -137,15 +120,15 @@ function M.back()
 	vim.list_extend(all_buffers, shown_buffers)
 
 	-- Drop last buffer
-	if #all_buffers > 3 then
+	if #all_buffers > config.max_columns then
 		all_buffers = vim.list_slice(all_buffers, 1, #all_buffers - 1)
 	end
 
-	-- Update stack (all except last 3)
-	vim.t.columntags_stack = vim.list_slice(all_buffers, 1, math.max(0, #all_buffers - 3))
+	-- Update stack (all except last max_columns)
+	vim.t.columntags_stack = vim.list_slice(all_buffers, 1, math.max(0, #all_buffers - config.max_columns))
 
-	-- Keep last three buffers
-	local last_three_buffers = vim.list_slice(all_buffers, math.max(1, #all_buffers - 2))
+	-- Keep last max_columns buffers
+	local last_three_buffers = vim.list_slice(all_buffers, math.max(1, #all_buffers - (config.max_columns - 1)))
 
 	windows = utils.keep_windows(#last_three_buffers)
 
@@ -180,6 +163,27 @@ function M.toggle()
 	else
 		M.enable()
 	end
+end
+
+function M.set_max_columns(value)
+	-- Validate: must be integer >= 1
+	local num_value = tonumber(value)
+	if not num_value then
+		vim.notify("ColumnTags: max_columns must be a number", vim.log.levels.ERROR)
+		return
+	end
+
+	if num_value < 1 or math.floor(num_value) ~= num_value then
+		vim.notify("ColumnTags: max_columns must be an integer >= 1", vim.log.levels.ERROR)
+		return
+	end
+
+	-- Update config
+	config.max_columns = num_value
+	vim.notify(
+		string.format("ColumnTags: max_columns set to %d (effective on next jump/back)", num_value),
+		vim.log.levels.INFO
+	)
 end
 
 return M

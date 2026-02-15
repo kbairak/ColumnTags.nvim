@@ -90,9 +90,9 @@ function M.show(stack)
 	-- Calculate width based on truncated content
 	local width = 20
 	for _, line in ipairs(display_lines) do
-		width = math.max(width, #line + 2) -- +2 for padding
+		width = math.max(width, #line + 4) -- +2 for padding
 	end
-	width = math.min(width, max_width + 2) -- Cap at max_width + padding
+	width = math.min(width, max_width + 4) -- Cap at max_width + padding
 
 	local win_config = {
 		relative = "editor",
@@ -131,3 +131,4 @@ function M.show(stack)
 end
 
 return M
+

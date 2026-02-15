@@ -1,7 +1,8 @@
-local M = { excluded_filetypes = nil, excluded_buftypes = nil }
+local M = { excluded_filetypes = nil, excluded_buftypes = nil, max_columns = nil }
 
 -- Default configuration
 local default_config = {
+	max_columns = 3,
 	excluded_filetypes = {
 		-- File explorers
 		"neo-tree",
@@ -45,6 +46,7 @@ local default_config = {
 
 -- Setup configuration with user options
 -- @param opts: user configuration options
+--   - max_columns: maximum number of columns to show (default: 3)
 --   - excluded_filetypes: replace default excluded filetypes
 --   - add_excluded_filetypes: extend default excluded filetypes
 --   - excluded_buftypes: replace default excluded buftypes
@@ -54,9 +56,15 @@ function M.setup(user_opts)
 
 	-- Start with defaults
 	local opts = {
+		max_columns = default_config.max_columns,
 		excluded_filetypes = vim.deepcopy(default_config.excluded_filetypes),
 		excluded_buftypes = vim.deepcopy(default_config.excluded_buftypes),
 	}
+
+	-- Handle max_columns
+	if user_opts.max_columns then
+		opts.max_columns = user_opts.max_columns
+	end
 
 	-- Handle excluded_filetypes: replace or extend
 	if user_opts.excluded_filetypes then
@@ -71,6 +79,9 @@ function M.setup(user_opts)
 	elseif user_opts.add_excluded_buftypes then
 		vim.list_extend(opts.excluded_buftypes, user_opts.add_excluded_buftypes)
 	end
+
+	-- Store max_columns
+	M.max_columns = opts.max_columns
 
 	-- Convert lists to lookup tables for efficient checking
 	M.excluded_filetypes = {}

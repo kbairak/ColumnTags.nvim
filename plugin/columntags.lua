@@ -44,6 +44,14 @@ local subcommands = {
 	toggle = function()
 		require("columntags").toggle()
 	end,
+	max_columns = function(args)
+		local value = args[2]
+		if not value then
+			vim.notify("ColumnTags: max_columns requires a value", vim.log.levels.ERROR)
+			return
+		end
+		require("columntags").set_max_columns(value)
+	end,
 }
 
 vim.api.nvim_create_user_command("ColumnTags", function(opts)
@@ -59,7 +67,7 @@ vim.api.nvim_create_user_command("ColumnTags", function(opts)
 
 	local handler = subcommands[subcommand]
 	if handler then
-		handler()
+		handler(opts.fargs)
 	else
 		vim.notify(
 			string.format("ColumnTags: Unknown subcommand '%s'. Available: %s", subcommand, table.concat(vim.tbl_keys(subcommands), ", ")),
@@ -67,7 +75,7 @@ vim.api.nvim_create_user_command("ColumnTags", function(opts)
 		)
 	end
 end, {
-	nargs = "?",
+	nargs = "*",
 	complete = function()
 		return vim.tbl_keys(subcommands)
 	end,

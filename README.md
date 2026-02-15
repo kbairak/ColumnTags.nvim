@@ -75,11 +75,12 @@ The plugin overrides the default tag jumping behavior with column-based navigati
 
 ### Commands
 
-| Command                  | Description                    |
-|--------------------------|--------------------------------|
-| `:ColumnTags enable`     | Enable ColumnTags navigation   |
-| `:ColumnTags disable`    | Disable ColumnTags navigation  |
-| `:ColumnTags toggle`     | Toggle ColumnTags on/off       |
+| Command                     | Description                              |
+|-----------------------------|------------------------------------------|
+| `:ColumnTags enable`        | Enable ColumnTags navigation             |
+| `:ColumnTags disable`       | Disable ColumnTags navigation            |
+| `:ColumnTags toggle`        | Toggle ColumnTags on/off                 |
+| `:ColumnTags max_columns N` | Set max columns to N (takes effect next) |
 
 When disabled, `<C-]>` and `<C-t>` fall back to Neovim's default tag behavior.
 
@@ -94,6 +95,26 @@ require('columntags').setup({
 ```
 
 ### Options
+
+#### Max Columns
+
+Control the maximum number of visible columns:
+
+- `max_columns` - Maximum number of columns to display (default: `3`)
+
+```lua
+require('columntags').setup({
+  max_columns = 5,  -- Show up to 5 columns instead of 3
+})
+```
+
+You can also change this value at runtime:
+
+```vim
+:ColumnTags max_columns 4
+```
+
+The new value takes effect on the next `jump()` or `back()` action.
 
 #### Excluded Filetypes and Buftypes
 
@@ -207,7 +228,7 @@ Result: [a.lua] [b.lua] [new.lua]
 - [x] Visual indicator for hidden stack depth
 - [x] Configuration
   - [x] Excluded filetypes or buftypes
-  - [ ] Max columns
+  - [x] Configurable Max columns
   - [ ] Configurable keymaps (allow users to disable default keymaps)
   - [ ] Configurable popup timeout duration
 - [ ] If no tag under cursor, do nothing (somehow)
