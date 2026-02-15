@@ -11,27 +11,35 @@ if not config.excluded_filetypes then
 	columntags.setup()
 end
 
--- Default keymap setup
-vim.keymap.set("n", "<C-]>", function()
-	require("columntags").jump()
-end, {
-	silent = true,
-	desc = "Column Tags: Jump to definition",
-})
+-- Default keymap setup (conditional based on config)
+if config.keymaps and config.keymaps ~= false then
+	if config.keymaps.jump and config.keymaps.jump ~= false then
+		vim.keymap.set("n", config.keymaps.jump, function()
+			require("columntags").jump()
+		end, {
+			silent = true,
+			desc = "Column Tags: Jump to definition",
+		})
+	end
 
-vim.keymap.set("n", "<C-t>", function()
-	require("columntags").back()
-end, {
-	silent = true,
-	desc = "Column Tags: Navigate back",
-})
+	if config.keymaps.back and config.keymaps.back ~= false then
+		vim.keymap.set("n", config.keymaps.back, function()
+			require("columntags").back()
+		end, {
+			silent = true,
+			desc = "Column Tags: Navigate back",
+		})
+	end
 
-vim.keymap.set("n", "<C-,>", function()
-	require("columntags").toggle()
-end, {
-	silent = true,
-	desc = "Column Tags: Toggle plugin",
-})
+	if config.keymaps.toggle and config.keymaps.toggle ~= false then
+		vim.keymap.set("n", config.keymaps.toggle, function()
+			require("columntags").toggle()
+		end, {
+			silent = true,
+			desc = "Column Tags: Toggle plugin",
+		})
+	end
+end
 
 -- Commands
 local subcommands = {

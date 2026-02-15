@@ -116,6 +116,63 @@ You can also change this value at runtime:
 
 The new value takes effect on the next `jump()` or `back()` action.
 
+#### Keymaps
+
+Control which keymaps are registered by the plugin. By default, three keymaps are registered, but you can customize, disable, or completely remove all default keymaps.
+
+**Default Keymaps:**
+- `jump` - `<C-]>` - Jump to definition
+- `back` - `<C-t>` - Navigate back
+- `toggle` - `<C-,>` - Toggle plugin on/off
+
+**Disable all default keymaps:**
+
+```lua
+require('columntags').setup({
+  keymaps = false,
+})
+```
+
+**Customize specific keymaps:**
+
+```lua
+require('columntags').setup({
+  keymaps = {
+    jump = "<leader>gd",
+    back = "<leader>gb",
+    -- toggle keeps default <C-,>
+  },
+})
+```
+
+**Disable individual keymaps:**
+
+```lua
+require('columntags').setup({
+  keymaps = {
+    toggle = false,  -- Don't map toggle
+    -- jump and back keep defaults <C-]> and <C-t>
+  },
+})
+```
+
+**Set your own keymaps manually when defaults are disabled:**
+
+```lua
+require('columntags').setup({
+  keymaps = false,
+})
+
+-- Define your own keymaps
+vim.keymap.set("n", "<leader>]", function()
+  require("columntags").jump()
+end, { silent = true, desc = "Column Tags: Jump" })
+
+vim.keymap.set("n", "<leader>[", function()
+  require("columntags").back()
+end, { silent = true, desc = "Column Tags: Back" })
+```
+
 #### Excluded Filetypes and Buftypes
 
 The plugin excludes certain window types from column navigation (file explorers, terminals, help windows, etc.). You can customize these exclusions using **replace mode** or **extend mode**.
@@ -229,7 +286,7 @@ Result: [a.lua] [b.lua] [new.lua]
 - [x] Configuration
   - [x] Excluded filetypes or buftypes
   - [x] Configurable Max columns
-  - [ ] Configurable keymaps (allow users to disable default keymaps)
+  - [x] Configurable keymaps (allow users to disable default keymaps)
   - [ ] Configurable popup timeout duration
 - [ ] If no tag under cursor, do nothing (somehow)
 

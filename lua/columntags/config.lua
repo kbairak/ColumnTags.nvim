@@ -1,8 +1,13 @@
-local M = { excluded_filetypes = nil, excluded_buftypes = nil, max_columns = nil }
+local M = { excluded_filetypes = nil, excluded_buftypes = nil, max_columns = nil, keymaps = nil }
 
 -- Default configuration
 local default_config = {
 	max_columns = 3,
+	keymaps = {
+		jump = "<C-]>",
+		back = "<C-t>",
+		toggle = "<C-,>",
+	},
 	excluded_filetypes = {
 		-- File explorers
 		"neo-tree",
@@ -51,6 +56,7 @@ local default_config = {
 --   - add_excluded_filetypes: extend default excluded filetypes
 --   - excluded_buftypes: replace default excluded buftypes
 --   - add_excluded_buftypes: extend default excluded buftypes
+--   - keymaps: configure keymaps (false to disable all, table to customize/disable individual)
 function M.setup(user_opts)
 	user_opts = user_opts or {}
 
@@ -59,6 +65,7 @@ function M.setup(user_opts)
 		max_columns = default_config.max_columns,
 		excluded_filetypes = vim.deepcopy(default_config.excluded_filetypes),
 		excluded_buftypes = vim.deepcopy(default_config.excluded_buftypes),
+		keymaps = vim.deepcopy(default_config.keymaps),
 	}
 
 	-- Handle max_columns
@@ -80,6 +87,18 @@ function M.setup(user_opts)
 		vim.list_extend(opts.excluded_buftypes, user_opts.add_excluded_buftypes)
 	end
 
+	-- Handle keymaps
+	if user_opts.keymaps == false then
+		-- Disable all keymaps
+		opts.keymaps = false
+	elseif type(user_opts.keymaps) == "table" then
+		-- Merge user keymaps with defaults
+		-- This allows partial override and individual disable with false
+		for key, value in pairs(user_opts.keymaps) do
+			opts.keymaps[key] = value
+		end
+	end
+
 	-- Store max_columns
 	M.max_columns = opts.max_columns
 
@@ -93,6 +112,9 @@ function M.setup(user_opts)
 	for _, bt in ipairs(opts.excluded_buftypes) do
 		M.excluded_buftypes[bt] = true
 	end
+
+	-- Store keymaps
+	M.keymaps = opts.keymaps
 end
 
 return M
