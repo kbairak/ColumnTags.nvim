@@ -16,9 +16,11 @@ function M.is_excluded_window(win)
 	local buf = vim.api.nvim_win_get_buf(win)
 	local filetype = vim.bo[buf].filetype
 	local buftype = vim.bo[buf].buftype
+	local buf_name = vim.api.nvim_buf_get_name(buf)
 	return win_config.relative ~= ""
 		or config.excluded_filetypes[filetype]
 		or config.excluded_buftypes[buftype]
+		or buf_name == ""
 end
 
 -- Get all non-floating, non-excluded windows
