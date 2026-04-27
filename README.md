@@ -51,13 +51,14 @@ lua require('columntags').setup()
 
 ## Usage
 
-The plugin overrides the default tag jumping behavior with column-based navigation:
+The plugin provides both column-based and legacy navigation:
 
 | Key     | Action                                    |
 |---------|-------------------------------------------|
 | `<C-]>` | Jump to definition in new column          |
 | `<C-t>` | Navigate back (move focus or restore col) |
-| `<C-,>` | Toggle ColumnTags mode                    |
+| `<C-.>` | Legacy jump (standard tag jump)           |
+| `<C-,>` | Legacy back (standard tag pop)            |
 
 ### Navigation Behavior
 
@@ -82,7 +83,7 @@ The plugin overrides the default tag jumping behavior with column-based navigati
 | `:ColumnTags toggle`        | Toggle ColumnTags on/off                 |
 | `:ColumnTags max_columns N` | Set max columns to N (takes effect next) |
 
-When disabled, `<C-]>` and `<C-t>` fall back to Neovim's default tag behavior.
+When disabled, `<C-]>` and `<C-t>` fall back to Neovim's default tag behavior. Alternatively, use the `legacy_jump` (`<C-.>`) and `legacy_back` (`<C-,>`) keymaps to access standard tag navigation without disabling the plugin.
 
 ## Configuration
 
@@ -136,9 +137,10 @@ Control which keymaps are registered by the plugin. By default, three keymaps ar
 
 **Default Keymaps:**
 
-- `jump` - `<C-]>` - Jump to definition
-- `back` - `<C-t>` - Navigate back
-- `toggle` - `<C-,>` - Toggle plugin on/off
+- `jump` - `<C-]>` - Jump to definition in new column
+- `back` - `<C-t>` - Navigate back through columns
+- `legacy_jump` - `<C-.>` - Standard tag jump without column management
+- `legacy_back` - `<C-,>` - Standard tag pop without column management
 
 **Disable all default keymaps:**
 
@@ -155,7 +157,8 @@ require('columntags').setup({
   keymaps = {
     jump = "<leader>gd",
     back = "<leader>gb",
-    -- toggle keeps default <C-,>
+    legacy_jump = "<leader>j",
+    legacy_back = "<leader>b",
   },
 })
 ```
@@ -165,7 +168,8 @@ require('columntags').setup({
 ```lua
 require('columntags').setup({
   keymaps = {
-    toggle = false,  -- Don't map toggle
+    legacy_jump = false,  -- Don't map legacy jump
+    legacy_back = false,  -- Don't map legacy back
     -- jump and back keep defaults <C-]> and <C-t>
   },
 })
@@ -186,6 +190,14 @@ end, { silent = true, desc = "Column Tags: Jump" })
 vim.keymap.set("n", "<leader>[", function()
   require("columntags").back()
 end, { silent = true, desc = "Column Tags: Back" })
+
+vim.keymap.set("n", "<leader>j", function()
+  require("columntags").legacy_jump()
+end, { silent = true, desc = "Column Tags: Legacy Jump" })
+
+vim.keymap.set("n", "<leader>k", function()
+  require("columntags").legacy_back()
+end, { silent = true, desc = "Column Tags: Legacy Back" })
 ```
 
 #### Excluded Filetypes and Buftypes

@@ -239,4 +239,14 @@ function M.set_max_columns(value)
 	)
 end
 
+function M.legacy_jump()
+	-- Just do a standard tag jump without column management
+	vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<C-]>", true, false, true), "n", false)
+end
+
+function M.legacy_back()
+	-- Just do a standard tag pop without column management
+	vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<C-t>", true, false, true), "n", false)
+end
+
 return M

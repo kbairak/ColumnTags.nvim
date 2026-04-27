@@ -7,7 +7,8 @@ local default_config = {
 	keymaps = {
 		jump = "<C-]>",
 		back = "<C-t>",
-		toggle = "<C-,>",
+		legacy_jump = "<C-.>",
+		legacy_back = "<C-,>",
 	},
 	excluded_filetypes = {
 		-- File explorers

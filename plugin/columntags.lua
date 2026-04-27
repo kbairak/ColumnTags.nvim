@@ -31,12 +31,21 @@ if config.keymaps and config.keymaps ~= false then
 		})
 	end
 
-	if config.keymaps.toggle and config.keymaps.toggle ~= false then
-		vim.keymap.set("n", config.keymaps.toggle, function()
-			require("columntags").toggle()
+	if config.keymaps.legacy_jump and config.keymaps.legacy_jump ~= false then
+		vim.keymap.set("n", config.keymaps.legacy_jump, function()
+			require("columntags").legacy_jump()
 		end, {
 			silent = true,
-			desc = "Column Tags: Toggle plugin",
+			desc = "Column Tags: Legacy jump (standard tag jump)",
+		})
+	end
+
+	if config.keymaps.legacy_back and config.keymaps.legacy_back ~= false then
+		vim.keymap.set("n", config.keymaps.legacy_back, function()
+			require("columntags").legacy_back()
+		end, {
+			silent = true,
+			desc = "Column Tags: Legacy back (standard tag pop)",
 		})
 	end
 end
