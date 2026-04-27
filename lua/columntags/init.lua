@@ -37,8 +37,9 @@ function M.jump()
 	for i = 1, current_window do
 		if vim.api.nvim_win_is_valid(windows[i]) then
 			local buf = vim.api.nvim_win_get_buf(windows[i])
-			local pos = vim.api.nvim_win_get_cursor(windows[i])
-			table.insert(shown_buffers, { buf, pos })
+			-- Save the complete view state (scroll position, folds, cursor)
+			local view = vim.api.nvim_win_call(windows[i], vim.fn.winsaveview)
+			table.insert(shown_buffers, { buf, view })
 		end
 	end
 
@@ -101,7 +102,10 @@ function M.jump()
 		for i, buf in ipairs(right) do
 			if vim.api.nvim_win_is_valid(windows[i]) and vim.api.nvim_buf_is_valid(buf[1]) then
 				vim.api.nvim_win_set_buf(windows[i], buf[1])
-				vim.api.nvim_win_set_cursor(windows[i], buf[2])
+				-- Restore the complete view state (scroll position, folds, cursor)
+				vim.api.nvim_win_call(windows[i], function()
+					vim.fn.winrestview(buf[2])
+				end)
 			end
 		end
 
@@ -161,8 +165,9 @@ function M.back()
 	for i = 1, #windows do
 		if vim.api.nvim_win_is_valid(windows[i]) then
 			local buf = vim.api.nvim_win_get_buf(windows[i])
-			local pos = vim.api.nvim_win_get_cursor(windows[i])
-			table.insert(shown_buffers, { buf, pos })
+			-- Save the complete view state (scroll position, folds, cursor)
+			local view = vim.api.nvim_win_call(windows[i], vim.fn.winsaveview)
+			table.insert(shown_buffers, { buf, view })
 		end
 	end
 
@@ -189,7 +194,10 @@ function M.back()
 	for i, buf in ipairs(last_three_buffers) do
 		if vim.api.nvim_win_is_valid(windows[i]) and vim.api.nvim_buf_is_valid(buf[1]) then
 			vim.api.nvim_win_set_buf(windows[i], buf[1])
-			vim.api.nvim_win_set_cursor(windows[i], buf[2])
+			-- Restore the complete view state (scroll position, folds, cursor)
+			vim.api.nvim_win_call(windows[i], function()
+				vim.fn.winrestview(buf[2])
+			end)
 		end
 	end
 

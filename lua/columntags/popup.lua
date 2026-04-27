@@ -32,7 +32,8 @@ function M.show(stack)
 
 	for _, buf in ipairs(stack) do
 		local bufname = vim.api.nvim_buf_get_name(buf[1])
-		local line_num = buf[2][1]
+		-- buf[2] is now a view object from winsaveview(), use .lnum for line number
+		local line_num = buf[2].lnum or buf[2][1] or 1
 
 		-- Get relative path if file is descendant of cwd
 		local display_name
