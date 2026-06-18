@@ -11,4 +11,3 @@ from h import h_func
 
 def g_func():
     h_func()
-

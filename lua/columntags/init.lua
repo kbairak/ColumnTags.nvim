@@ -21,10 +21,6 @@ function M.jump()
 		return
 	end
 
-	-- Disable foldenable
-	local foldenable_before = vim.opt.foldenable
-	vim.opt.foldenable = false
-
 	-- Capture state BEFORE the jump
 	local orig_buf = vim.api.nvim_get_current_buf()
 	local orig_pos = vim.api.nvim_win_get_cursor(0)
@@ -61,8 +57,6 @@ function M.jump()
 		local new_pos = vim.api.nvim_win_get_cursor(0)
 
 		if orig_buf == new_buf and orig_pos[1] == new_pos[1] and orig_pos[2] == new_pos[2] then
-			-- Jump failed - restore foldenable and do nothing
-			vim.opt.foldenable = foldenable_before
 			return
 		end
 
@@ -114,9 +108,6 @@ function M.jump()
 			vim.api.nvim_set_current_win(windows[#windows])
 		end
 
-		-- Restore foldenable
-		vim.opt.foldenable = foldenable_before
-
 		-- Show popup
 		popup.show(vim.t.columntags_stack)
 	end
@@ -131,7 +122,7 @@ function M.jump()
 	-- Fallback timeout in case autocmd doesn't fire
 	vim.defer_fn(function()
 		handle_jump_complete()
-	end, 100)
+	end, config.fallback_timeout)
 
 	-- Do the jump in-place in the current window
 	vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<C-]>", true, false, true), "n", false)
